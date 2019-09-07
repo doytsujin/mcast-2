@@ -3,8 +3,8 @@ Sockets, syscalls and goroutines
 ================================
 
 With educational purposes:
-   - implement multicast TCP chat using goroutines and map
-   - implement multicast UDP chat using low-level api (syscalls and sockets)
+   - implement multicast TCP chat using goroutines and map (IPv4, IPv6)
+   - implement multicast UDP chat using low-level calls: syscalls (IPv4, IPv6)
    - play with params: backlog, time-wait, blocking vs non-blocking sockets
 
 Usage
