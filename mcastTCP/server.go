@@ -9,13 +9,14 @@ import (
 )
 
 var IP = [4]byte{127, 0, 0, 1}
+
 const (
 	//Fd = "myown" // AF_UNIX
 	Port = 3000 // AF_INET | AF_INET6
 )
 
 type Server struct {
-	serverSocket int
+	serverSocket  int
 	clientSockets map[int]int
 }
 
@@ -28,10 +29,10 @@ func (s *Server) setup(addr *syscall.SockaddrInet4) error {
 	if err = syscall.SetsockoptInt(sock, syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1); err != nil {
 		return err
 	}
-	fmt.Println("Set opt: SO_REUSEADDR")
+	log.Println("Set opt: SO_REUSEADDR")
 
 	linger := syscall.Linger{
-		Onoff: 1,
+		Onoff:  1,
 		Linger: 1,
 	}
 	if err = syscall.SetsockoptLinger(sock, syscall.SOL_SOCKET, syscall.SO_LINGER, &linger); err != nil {
@@ -56,7 +57,7 @@ func (s *Server) listen(backlog int) error {
 	if err := syscall.Listen(s.serverSocket, backlog); err != nil {
 		return err
 	}
-	fmt.Println("Listen to socket:", s)
+	log.Println("Listen to socket:", s)
 	return nil
 }
 
@@ -83,7 +84,7 @@ func (s *Server) handle(clientSock int) {
 		if err := syscall.Close(clientSock); err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Println("Closed:", clientSock)
+		log.Println("Closed:", clientSock)
 	}()
 
 	buf := make([]byte, 1024)
@@ -99,9 +100,9 @@ func (s *Server) handle(clientSock int) {
 
 		s.sendAll(buf[:n], clientSock)
 
-		//fmt.Println("Socket:", fd)
-		fmt.Println("Accepted bytes:", n)
-		fmt.Printf("[%d] >>> %s", clientSock, buf)
+		//log.Println("Socket:", fd)
+		log.Println("Accepted bytes:", n)
+		log.Printf("[%d] >>> %s", clientSock, buf)
 
 		// set zeros only on non-zero bytes
 		copy(buf, make([]byte, n))
@@ -128,12 +129,12 @@ func (s *Server) teardown() error {
 	if err := syscall.Close(s.serverSocket); err != nil {
 		return err
 	}
-	fmt.Println("Closed:", s)
+	log.Println("Closed:", s)
 
 	//if err = syscall.Unlink(Fd); err != nil {
 	//	return err
 	//}
-	//fmt.Println("Unlink:", Fd)
+	//log.Println("Unlink:", Fd)
 	return nil
 }
 
@@ -147,14 +148,14 @@ func main() {
 	if err := s.listen(5); err != nil {
 		log.Fatalln("failed to listen", err)
 	}
-	log.Printf("Server listening to %d", Port)
+	log.Printf("Listening to port %d", Port)
 
 	// trap signals
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGABRT, syscall.SIGHUP)
 	go func() {
 		sigcall := <-sig
-		fmt.Println("Caught signal:", sigcall)
+		log.Println("Caught signal:", sigcall)
 		if err := s.teardown(); err != nil {
 			log.Println(err)
 		}
@@ -168,7 +169,7 @@ func main() {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Println("New client:", clientSocket)
+		log.Println("New client:", clientSocket)
 
 		if err = s.addMemberToGroup(clientSocket); err != nil {
 			log.Println("[WARNING]", "failed to add", clientSocket, "to group")
